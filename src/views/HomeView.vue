@@ -1,18 +1,132 @@
 <template>
   <div class="home">
-    <img alt="Vue logo" src="../assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js + TypeScript App"/>
+    <div id=map></div>
+    <div class="features">
+      <MapFeatures/>
+    </div>
   </div>
 </template>
 
+<style>
+  .home{
+    height: 100vh;
+    position: relative;
+  }
+
+  .features, #map {
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+
+  .features {
+    background-color: rgba(0, 0, 0, 0);
+    z-index: 2;
+    width: 100%;
+    height: 0%;
+  }
+
+  #map {
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+  }
+
+</style>
+
 <script lang="ts">
-import { defineComponent } from 'vue';
-import HelloWorld from '@/components/HelloWorld.vue'; // @ is an alias to /src
+import { defineComponent, onMounted, ref } from 'vue';
+import L, { LatLng, Icon } from "leaflet";
+import MapFeatures from "@/components/MapFeatures.vue"
 
 export default defineComponent({
   name: 'HomeView',
-  components: {
-    HelloWorld,
-  },
+  components: {MapFeatures},
+  setup(){
+    let map: L.Map;
+
+    onMounted(() => {
+      //initialize map with default top-left zoom control off
+      map = L.map('map', {zoomControl: false}).setView([13.41, 122.56], 5);
+
+      // add tile layer
+      L.tileLayer(
+       "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+       {
+        maxZoom: 18,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+       }
+     ).addTo(map);
+
+     // position zoom control in bottom left
+     L.control.zoom({ position: 'bottomleft' }).addTo(map);
+    
+     // get user's current coordinate
+     if (sessionStorage.getItem("coords")){
+        UserCoords.value = JSON.parse(sessionStorage.getItem('coords') || 'null'); 
+        //plotPin(UserCoords.value);
+        return;
+      }
+
+      fetchCoords.value = true;
+      navigator.geolocation.getCurrentPosition(setUserCoords, getUserLocError);
+    });
+  
+    const UserCoords = ref<any>(null);
+    const fetchCoords = ref(false);
+    //const geoMarker = ref<L.Marker | null>(null);
+    const UserCoordsError = ref<boolean | null>(null);
+    const UserCoordsErrorMsg = ref(null);
+
+    const setUserCoords = (pos: any) => {
+      // stop fetching coords
+      fetchCoords.value = false;
+
+      // set user's coords in session storage
+      const SessionCoords = {
+        lat: pos.coords.latitude as number,
+        lng: pos.coords.longitude as number
+      };
+
+      //add to session storage
+      sessionStorage.setItem('coords', JSON.stringify(SessionCoords));
+
+      // set ref coords value
+      UserCoords.value = SessionCoords;
+      //plotPin(UserCoords.value);
+    }
+
+    const getUserLocError =  (err: any) => {
+      fetchCoords.value = false;
+      UserCoordsError.value = true;
+      UserCoordsErrorMsg.value = err.message;
+    }
+
+    const closeUserCoordsError = () => {
+      UserCoordsError.value = null;
+      UserCoordsErrorMsg.value = null;
+    }
+
+    const plotPin = (coords: { lat: number, lng: number }) => {
+      // create custom marker
+      const categoryMarker = L.icon({
+        iconUrl: require("../assets/category-pins/resort.svg"),
+        iconSize: [40, 40]
+      })
+
+      if (coords !== null){
+        console.log(coords.lat);
+        console.log(coords.lng);
+        const position: LatLng = new L.LatLng(coords.lat, coords.lng);
+        new L.Marker(position, {icon: categoryMarker}).addTo(map);
+
+        map.setView(position, 10);
+      }
+    };
+
+    return {UserCoords, closeUserCoordsError }
+  }
 });
 </script>
+
+
