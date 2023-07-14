@@ -2,7 +2,7 @@
   <div class="home">
     <div id=map></div>
     <div class="features">
-      <MapFeatures/>
+      <MapFeatures @plotPin="plotPin"/>
     </div>
   </div>
 </template>
@@ -72,11 +72,14 @@ export default defineComponent({
       navigator.geolocation.getCurrentPosition(setUserCoords, getUserLocError);
     });
   
+    // user's current location
     const UserCoords = ref<any>(null);
     const fetchCoords = ref(false);
-    //const geoMarker = ref<L.Marker | null>(null);
     const UserCoordsError = ref<boolean | null>(null);
-    const UserCoordsErrorMsg = ref(null);
+    const UserCoordsErrorMsg = ref(null); 
+
+    //selected location
+    const currentMarkers: L.Marker<any>[] = [];
 
     const setUserCoords = (pos: any) => {
       // stop fetching coords
@@ -108,6 +111,10 @@ export default defineComponent({
     }
 
     const plotPin = (coords: { lat: number, lng: number }) => {
+      for (const marker of currentMarkers) {
+        map.removeLayer(marker);
+    }
+
       // create custom marker
       const categoryMarker = L.icon({
         iconUrl: require("../assets/category-pins/resort.svg"),
@@ -118,13 +125,14 @@ export default defineComponent({
         console.log(coords.lat);
         console.log(coords.lng);
         const position: LatLng = new L.LatLng(coords.lat, coords.lng);
-        new L.Marker(position, {icon: categoryMarker}).addTo(map);
+        currentMarkers.push(new L.Marker(position, {icon: categoryMarker}).addTo(map));
 
-        map.setView(position, 10);
+        map.flyTo(position, 10);
+
       }
     };
 
-    return {UserCoords, closeUserCoordsError }
+    return {UserCoords, closeUserCoordsError, plotPin}
   }
 });
 </script>

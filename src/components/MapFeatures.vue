@@ -7,7 +7,7 @@
         <img src="../assets/filter.png" alt="search icon">
       </div>
       <div id="search-results-container" v-if="query && searchData">
-        <div id="search-results" v-for="(result, index) in searchData" :key="index">
+        <div id="search-results" v-for="(result, index) in searchData" :key="index" @click="select(result)">
             <img src="../assets/marker.png" alt="search icon">
             <p>{{ result.properties.display_name }}</p>
         </div>
@@ -27,26 +27,28 @@ export default defineComponent({
     const query = ref("");
     const searchData = ref("");
 
-    const search = () => {        
+    const search = () => {  
         fetch("http://nominatim.openstreetmap.org/search?format=geojson&q=" + query.value)
             .then(result => result.json())
             .then(parsedResult => {
-                //searchResultElement.innerHTML = "";
+                console.log(parsedResult);
                 searchData.value = "";
 
                 if (query.value !== ""){
                     searchData.value = parsedResult.features;
-                }
-                
-
-
-
-
-                
+                }        
         });
     }
 
-    return {query, search, searchData};
+    const select = (result: any) => {
+        console.log(result);
+
+        const position = { lat: result.geometry.coordinates[1], lng: result.geometry.coordinates[0] }
+        emit("plotPin", position);
+    }
+
+
+    return {query, select, search, searchData};
   }
 
   
