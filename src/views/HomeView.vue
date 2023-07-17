@@ -32,15 +32,30 @@
     height: 100%;
   }
 
+  .cluster-group div {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background-color: whitesmoke;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+
+    display: flex;
+    text-align: center;
+    justify-content: center;
+    align-items: center;
+
+    font-size: 12px;
+  }
+
 </style>
 
 <script lang="ts">
 import { defineComponent, onMounted, ref } from 'vue';
 import L, { LatLng, Icon } from "leaflet";
-import 'leaflet.markercluster';
 import MapFeatures from "@/components/MapFeatures.vue"
-import { mapData } from './map';
 
+import { mapData } from './map';
+import 'leaflet.markercluster';
 
 export default defineComponent({
   name: 'HomeView',
@@ -68,19 +83,33 @@ export default defineComponent({
      if (sessionStorage.getItem("coords")){
         UserCoords.value = JSON.parse(sessionStorage.getItem('coords') || 'null'); 
         //plotPin(UserCoords.value);
-
-        //console.log(mapData);
-        var markers = L.markerClusterGroup({
-          iconCreateFunction: function(cluster) {
-            return L.divIcon({ html: '<b>' + cluster.getChildCount() + '</b>' });
-          }
-        });
         
-        var marker = L.geoJSON(mapData);
+        const marker = L.geoJSON(mapData, {
+          onEachFeature: function (feature, layer) {
+                const popupContent =
+                '<h4>Street Light</h4>';
+                layer.bindPopup(popupContent);
 
-        markers.addLayer(marker);
-        map.addLayer(markers);
-          
+          },
+          pointToLayer: function (feature, latlng) {
+            return new L.Marker(latlng, {icon: categoryMarker});
+          },
+        });
+
+        const markers = L.markerClusterGroup({
+            //unable showing bounds of markers
+            showCoverageOnHover: false,
+
+            iconCreateFunction: function(cluster) {
+              return L.divIcon({ 
+                className: "cluster-group",
+                html: '<div>' + cluster.getChildCount() + '</div>' })
+            }
+        }).addLayer(marker);
+
+        // marker clustering
+        map.addLayer(markers); 
+  
         return;
       }
 
