@@ -28,7 +28,7 @@ export default defineComponent({
     const searchData = ref("");
 
     const search = () => {  
-        fetch("http://nominatim.openstreetmap.org/search?format=geojson&limit=5&q=" + query.value)
+        fetch("http://nominatim.openstreetmap.org/search?format=geojson&q=" + query.value)
             .then(result => result.json())
             .then(parsedResult => {
                 console.log(parsedResult);
