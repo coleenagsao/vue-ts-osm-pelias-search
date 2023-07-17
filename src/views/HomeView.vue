@@ -2,7 +2,7 @@
   <div class="home">
     <div id=map></div>
     <div class="features">
-      <MapFeatures @plotPin="plotPin"/>
+      <MapFeatures @selectLocation="selectLocation"/>
     </div>
   </div>
 </template>
@@ -51,11 +51,21 @@
 
 <script lang="ts">
 import { defineComponent, onMounted, ref } from 'vue';
-import L, { LatLng, Icon } from "leaflet";
+import L, { LatLng } from "leaflet";
 import MapFeatures from "@/components/MapFeatures.vue"
 
 import { mapData } from './map';
 import 'leaflet.markercluster';
+
+//category pins
+function createCategoryPin(fileName: string){
+  return L.icon({iconUrl: require(`../assets/category-pins/${fileName}.svg`), iconSize: [50, 50]});
+}
+
+const categoryPinResort = createCategoryPin("resort");
+const categoryPinWildlife = createCategoryPin("wildlife");
+const categoryPinRestaurant = createCategoryPin("restaurant");
+
 
 export default defineComponent({
   name: 'HomeView',
@@ -82,24 +92,29 @@ export default defineComponent({
      // get user's current coordinate
      if (sessionStorage.getItem("coords")){
         UserCoords.value = JSON.parse(sessionStorage.getItem('coords') || 'null'); 
-        //plotPin(UserCoords.value);
         
         const marker = L.geoJSON(mapData, {
-          onEachFeature: function (feature, layer) {
+          onEachFeature: function (feature: any, layer) {
                 const popupContent =
-                '<h4>Street Light</h4>';
-                layer.bindPopup(popupContent);
+                '<h4>' + feature.properties.name +  '</h4>' + feature.properties.description;
+                layer.bindTooltip(popupContent);
 
           },
           pointToLayer: function (feature, latlng) {
-            return new L.Marker(latlng, {icon: categoryMarker});
+            if (feature.properties.type == "Adventure"){
+              return new L.Marker(latlng, {icon: categoryPinWildlife});
+            } else if (feature.properties.type == "Food & Drink") {
+              return new L.Marker(latlng, {icon: categoryPinRestaurant});
+            } else {
+              return new L.Marker(latlng, {icon: categoryPinResort}); //temp
+            }     
           },
         });
 
         const markers = L.markerClusterGroup({
             //unable showing bounds of markers
             showCoverageOnHover: false,
-
+            disableClusteringAtZoom: 7, // set zoom level clustering is disabled
             iconCreateFunction: function(cluster) {
               return L.divIcon({ 
                 className: "cluster-group",
@@ -116,15 +131,12 @@ export default defineComponent({
       fetchCoords.value = true;
       navigator.geolocation.getCurrentPosition(setUserCoords, getUserLocError);
 
-      //temp: plot initial locations
-
     });
   
     // icons
-    const categoryMarker = L.icon({
-      iconUrl: require("../assets/category-pins/resort.svg"),
-      iconSize: [40, 40]
-    })
+
+
+
 
     const photoMarker = L.icon({
       iconUrl: require("../assets/photo-pins/resort.svg"),
@@ -178,9 +190,9 @@ export default defineComponent({
         console.log(coords.lat);
         console.log(coords.lng);
         const position: LatLng = new L.LatLng(coords.lat, coords.lng);
-        currentMarkers.push(new L.Marker(position, {icon: categoryMarker}).addTo(map));
+        currentMarkers.push(new L.Marker(position, {icon: categoryPinRestaurant}).addTo(map));
 
-        map.flyTo(position, 9);
+        map.flyTo(position, 12);
 
         for (const marker of currentMarkers) {
           map.on('zoomend', function() {
@@ -188,14 +200,24 @@ export default defineComponent({
               if (map.getZoom() > 7) {
                 marker.setIcon(photoMarker);
               } else {
-                marker.setIcon(categoryMarker);
+                marker.setIcon(categoryPinRestaurant);
               }
           });
         }
       }
     };
 
-    return {UserCoords, closeUserCoordsError, plotPin}
+    const selectLocation = (coords: { lat: number, lng: number }) => {
+      if (coords !== null){
+        console.log(coords.lat);
+        console.log(coords.lng);
+
+        const position: LatLng = new L.LatLng(coords.lat, coords.lng);
+        map.flyTo(position, 12);
+      }
+    };
+
+    return {UserCoords, closeUserCoordsError, selectLocation}
   }
 });
 </script>

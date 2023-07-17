@@ -2,7 +2,7 @@
 <div class="features-container">
     <div id="searchBar">
       <img src="../assets/search.png" alt="search icon">
-      <input id="searchValue" v-model="query" v-on:input="search" type="text" placeholder="Negros Occidental">
+      <input id="searchValue" v-model="query" v-on:keyup.enter="search" type="text" placeholder="Negros Occidental">
       <div id="filter">
         <img src="../assets/filter.png" alt="search icon">
       </div>
@@ -28,7 +28,7 @@ export default defineComponent({
     const searchData = ref("");
 
     const search = () => {  
-        fetch("http://nominatim.openstreetmap.org/search?format=geojson&q=" + query.value)
+        fetch("http://nominatim.openstreetmap.org/search?format=geojson&limit=5&q=" + query.value)
             .then(result => result.json())
             .then(parsedResult => {
                 console.log(parsedResult);
@@ -44,9 +44,8 @@ export default defineComponent({
         console.log(result);
 
         const position = { lat: result.geometry.coordinates[1], lng: result.geometry.coordinates[0] }
-        emit("plotPin", position);
+        emit("selectLocation", position);
     }
-
 
     return {query, select, search, searchData};
   }
