@@ -37,7 +37,10 @@
 <script lang="ts">
 import { defineComponent, onMounted, ref } from 'vue';
 import L, { LatLng, Icon } from "leaflet";
+import 'leaflet.markercluster';
 import MapFeatures from "@/components/MapFeatures.vue"
+import { mapData } from './map';
+
 
 export default defineComponent({
   name: 'HomeView',
@@ -65,13 +68,40 @@ export default defineComponent({
      if (sessionStorage.getItem("coords")){
         UserCoords.value = JSON.parse(sessionStorage.getItem('coords') || 'null'); 
         //plotPin(UserCoords.value);
+
+        //console.log(mapData);
+        var markers = L.markerClusterGroup({
+          iconCreateFunction: function(cluster) {
+            return L.divIcon({ html: '<b>' + cluster.getChildCount() + '</b>' });
+          }
+        });
+        
+        var marker = L.geoJSON(mapData);
+
+        markers.addLayer(marker);
+        map.addLayer(markers);
+          
         return;
       }
 
       fetchCoords.value = true;
       navigator.geolocation.getCurrentPosition(setUserCoords, getUserLocError);
+
+      //temp: plot initial locations
+
     });
   
+    // icons
+    const categoryMarker = L.icon({
+      iconUrl: require("../assets/category-pins/resort.svg"),
+      iconSize: [40, 40]
+    })
+
+    const photoMarker = L.icon({
+      iconUrl: require("../assets/photo-pins/resort.svg"),
+      iconSize: [100, 100]
+    })
+
     // user's current location
     const UserCoords = ref<any>(null);
     const fetchCoords = ref(false);
@@ -115,20 +145,24 @@ export default defineComponent({
         map.removeLayer(marker);
     }
 
-      // create custom marker
-      const categoryMarker = L.icon({
-        iconUrl: require("../assets/category-pins/resort.svg"),
-        iconSize: [40, 40]
-      })
-
       if (coords !== null){
         console.log(coords.lat);
         console.log(coords.lng);
         const position: LatLng = new L.LatLng(coords.lat, coords.lng);
         currentMarkers.push(new L.Marker(position, {icon: categoryMarker}).addTo(map));
 
-        map.flyTo(position, 10);
+        map.flyTo(position, 9);
 
+        for (const marker of currentMarkers) {
+          map.on('zoomend', function() {
+            //console.log(map.getZoom());
+              if (map.getZoom() > 7) {
+                marker.setIcon(photoMarker);
+              } else {
+                marker.setIcon(categoryMarker);
+              }
+          });
+        }
       }
     };
 
