@@ -132,7 +132,7 @@ export default defineComponent({
 
     }); // end of onMounted
 
-    //selected location
+    // initialize variable to hold current markers (currently not used due to markercluster)
     const currentMarkers: L.Marker<any>[] = [];
     
     // add pin and navgigate to given coordinates
@@ -162,10 +162,11 @@ export default defineComponent({
       }
     };
 
+    // function that fly to given location
     const selectLocation = (coords: { lat: number, lng: number }) => {
       if (coords !== null){
-        console.log(coords.lat);
-        console.log(coords.lng);
+        // console.log(coords.lat);
+        // console.log(coords.lng);
 
         const position: LatLng = new L.LatLng(coords.lat, coords.lng);
         map.flyTo(position, 12);
