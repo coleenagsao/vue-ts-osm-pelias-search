@@ -2,20 +2,19 @@
 <div class="features-container">
     <div id="searchBar">
       <img src="../assets/search.png" alt="search icon">
-      <input id="searchValue" v-model="query" v-on:keyup.enter="search" type="text" placeholder="Negros Occidental">
+      <input id="searchValue" v-model="query" type="text" placeholder="Negros Occidental">
       <div id="filter">
         <img src="../assets/filter.png" alt="search icon">
       </div>
       <div id="search-results-container" v-if="query && searchData">
         <div id="search-results" v-for="(result, index) in searchData" :key="index" @click="select(result)">
             <img src="../assets/marker.png" alt="search icon">
-            <p>{{ result.properties.display_name }}</p>
+            <p>{{ result.properties.label }}</p>
         </div>
       </div>
     </div>
 </div>
 </template>
-
 
 <script lang="ts">
 import { defineComponent, ref } from 'vue';
@@ -27,8 +26,9 @@ export default defineComponent({
     const query = ref("");
     const searchData = ref("");
 
+    // function that gets search results from pelias (v-on:input="search")
     const search = () => {  
-        fetch("http://nominatim.openstreetmap.org/search?format=geojson&q=" + query.value)
+        fetch("http://localhost:4000/v1/autocomplete?&text=" + query.value)
             .then(result => result.json())
             .then(parsedResult => {
                 console.log(parsedResult);
@@ -49,8 +49,6 @@ export default defineComponent({
 
     return {query, select, search, searchData};
   }
-
-  
 })
 
 </script>
@@ -126,7 +124,5 @@ search-results img {
     height: 12px;
     padding: 15px;
 }
-
-
 
 </style>

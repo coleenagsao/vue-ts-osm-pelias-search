@@ -53,8 +53,11 @@
 import { defineComponent, onMounted, ref } from 'vue';
 import L, { LatLng } from "leaflet";                               
 import { mapData } from './map';                          // add dummy data
-import 'leaflet.markercluster';                           // add marker clustering functionality
+
 import MapFeatures from "@/components/MapFeatures.vue"    // add component containing search
+
+import 'leaflet.markercluster';                           // add marker clustering functionality
+import 'pelias-leaflet-plugin';                           // add pelias search plugin
 
 // function that creates Leaflet Icons
 function createCategoryPin(fileName: string){
@@ -126,11 +129,13 @@ export default defineComponent({
         }
       }).addLayer(markers);
       map.addLayer(markerClusterGroup); 
+
     }); // end of onMounted
 
     //selected location
     const currentMarkers: L.Marker<any>[] = [];
     
+    // add pin and navgigate to given coordinates
     const plotPin = (coords: { lat: number, lng: number }) => {
       for (const marker of currentMarkers) {
         map.removeLayer(marker);
