@@ -1,19 +1,19 @@
 <template>
-<div class="features-container">
-    <div id="searchBar">
-      <img src="../assets/search.png" alt="search icon">
-      <input id="searchValue" v-model="query" type="text" placeholder="Negros Occidental">
-      <div id="filter">
-        <img src="../assets/filter.png" alt="search icon">
-      </div>
-      <div id="search-results-container" v-if="query && searchData">
-        <div id="search-results" v-for="(result, index) in searchData" :key="index" @click="select(result)">
-            <img src="../assets/marker.png" alt="search icon">
-            <p>{{ result.properties.label }}</p>
+    <div class="features-container">
+        <div id="searchBar">
+        <img src="../assets/search.png" alt="search icon">
+        <input id="searchValue" v-model="query" v-on:input="search" type="text" placeholder="Negros Occidental">
+        <div id="filter">
+            <img src="../assets/filter.png" alt="search icon">
         </div>
-      </div>
+        <div id="search-results-container" v-if="query && searchData">
+            <div id="search-results" v-for="(result, index) in searchData" :key="index" @click="select(result)">
+                <img src="../assets/marker.png" alt="search icon">
+                <p>{{ result.properties.label }}</p>
+            </div>
+        </div>
+        </div>
     </div>
-</div>
 </template>
 
 <script lang="ts">
@@ -26,9 +26,9 @@ export default defineComponent({
     const query = ref("");
     const searchData = ref("");
 
-    // function that gets search results from pelias (v-on:input="search")
+    // function that gets search results from pelias
     const search = () => {  
-        fetch("http://localhost:4000/v1/autocomplete?&text=" + query.value)
+        fetch("http://localhost:4000/v1/autocomplete?source=osm&text=" + query.value)
             .then(result => result.json())
             .then(parsedResult => {
                 console.log(parsedResult);
