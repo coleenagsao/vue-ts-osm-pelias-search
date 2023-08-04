@@ -31,7 +31,7 @@ export default defineComponent({
         fetch("http://localhost:4000/v1/autocomplete?source=osm&text=" + query.value)
             .then(result => result.json())
             .then(parsedResult => {
-                console.log(parsedResult);
+                //console.log(parsedResult);
                 searchData.value = "";
 
                 if (query.value !== ""){
